@@ -15,6 +15,7 @@ lock = asyncio.Lock()
 async def forward_cmd(bot, message):
     if message.from_user.id not in ADMINS: return
     if message.text:
+        logger.info("its text")
         regex = re.compile("(https://)?(t\.me/|telegram\.me/|telegram\.dog/)(c/)?(\d+|[a-zA-Z_0-9]+)/(\d+)$")
         match = regex.match(message.text)
         if not match:
@@ -24,12 +25,15 @@ async def forward_cmd(bot, message):
         if source_chat_id.isnumeric():
             source_chat_id  = int(("-100" + source_chat_id))
     elif message.forward_from_chat.type == enums.ChatType.CHANNEL:
+        logger.info("its channel")
         last_msg_id = message.forward_from_message_id
         source_chat_id = message.forward_from_chat.username or message.forward_from_chat.id
     else:
+        logger.info("its nothing")
         return await message.reply_text("Something is missing !")
     try:
         source_chat = await bot.get_chat(source_chat_id)
+        logger.info("got source chat")
     except ChannelInvalid:
         return await message.reply('This may be a private channel / group. Make me an admin over there to index the files.')
     except (UsernameInvalid, UsernameNotModified):
@@ -39,6 +43,7 @@ async def forward_cmd(bot, message):
         return await message.reply(f'Errors - {e}')
     try:
         k = await bot.get_messages(source_chat_id, last_msg_id)
+        logger.info("got msgs")
     except:
         return await message.reply('Make Sure That Iam An Admin In The Channel, if channel is private')
     if k.empty:
@@ -52,6 +57,7 @@ async def forward_cmd(bot, message):
                 chat_id=message.from_user.id,
                 text="<b>Fist add your target channel ID using /set_target command !</b>"
             )
+        logger.info("got user")
     else:
         await db.new_user(message.from_user.id, message.from_user.first_name, message.from_user.username)
         return await message.reply_text(
@@ -64,13 +70,17 @@ async def forward_cmd(bot, message):
         'source_chat_id': source_chat_id,
         'target_chat_id': int(user['target_chat'])
     }
+    logger.info("updating data")
     button = [[
         InlineKeyboardButton("YES", callback_data=f"forward#{message.from_user.id}")
     ],[
         InlineKeyboardButton("NO", callback_data="close")
     ]]
     target_chat = await bot.get_chat(chat_id=int(user['target_chat']))
-    await message.reply_text(
+    logger.info("got target chat")
+    await bot.send_message(
+        chat_id=message.from_user.id,
         text=f"Do you want to start forwarding from {source_chat.title} to {target_chat.title} ?",
         reply_markup=InlineKeyboardMarkup(button)
     )
+    logger.info("done sending")
