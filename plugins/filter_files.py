@@ -23,11 +23,13 @@ async def forward_cmd(bot, message):
         last_msg_id = int(match.group(5))
         if source_chat_id.isnumeric():
             source_chat_id  = int(("-100" + source_chat_id))
+        else:
+            await message.reply_text(f"Something went wrong !\n {source_chat_id}")
     elif message.forward_from_chat.type == enums.ChatType.CHANNEL:
         last_msg_id = message.forward_from_message_id
         source_chat_id = message.forward_from_chat.username or message.forward_from_chat.id
     else:
-        return
+        return await message.reply_text("Something is missing !")
     try:
         await bot.get_chat(source_chat_id)
     except ChannelInvalid:
