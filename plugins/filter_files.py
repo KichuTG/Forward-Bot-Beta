@@ -57,11 +57,16 @@ async def forward_cmd(bot, message):
     logger.info("got user")
     if user is not None:
         logger.info("user is not None")
-        if int(user['target_chat']) == 0:
-            return await bot.send_message(
-                chat_id=message.from_user.id,
-                text="<b>Fist add your target channel ID using /set_target command !</b>"
-            )
+        try:
+            logger.info("inside try")
+            if int(user['target_chat']) == 0:
+                return await bot.send_message(
+                    chat_id=message.from_user.id,
+                    text="<b>Fist add your target channel ID using /set_target command !</b>"
+                )
+        except Exception as e:
+            logger.exception(e)
+            await message.reply_text(f"Error: {e}")
         logger.info("target chat is already set")
     else:
         logger.info("user is none")
